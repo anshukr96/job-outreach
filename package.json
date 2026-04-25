@@ -1,0 +1,37 @@
+{
+  "name": "job-outreach-bot",
+  "version": "1.0.0",
+  "description": "Automated job application outreach system - scrapes jobs, finds hiring managers, sends personalized cold emails",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "scrape:linkedin": "node src/scrapers/linkedin.js",
+    "scrape:naukri": "node src/scrapers/naukri.js",
+    "test:enrichment": "node -e \"require('./src/enrichment/apollo').findManager('razorpay.com').then(console.log)\"",
+    "test:generator": "node -e \"require('./src/generator/emailGenerator').generateEmail('We are hiring a Senior Frontend Engineer with React and Next.js experience.', 'Test Manager', 'Test Company').then(console.log)\"",
+    "followup": "node src/followup.js"
+  },
+  "keywords": [
+    "job-search",
+    "automation",
+    "cold-email",
+    "playwright",
+    "supabase",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "@supabase/supabase-js": "^2.45.4",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "nodemailer": "^6.9.15",
+    "playwright": "^1.48.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,78 @@
+name: Daily Job Outreach Pipeline
+
+on:
+  schedule:
+    - cron: '30 3 * * 1-5'   # 9:00 AM IST, Monday to Friday
+  workflow_dispatch:           # Manual trigger from the Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Pipeline
+        env:
+          LINKEDIN_COOKIE:    ${{ secrets.LINKEDIN_COOKIE }}
+          APOLLO_API_KEY:     ${{ secrets.APOLLO_API_KEY }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:       ${{ secrets.SUPABASE_KEY }}
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          HUNTER_API_KEY:     ${{ secrets.HUNTER_API_KEY }}
+          SENDER_NAME:        ${{ secrets.SENDER_NAME }}
+        run: node src/index.js
+
+      - name: Notify on Failure
+        if: failure() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d '{"text":"Job Outreach Pipeline FAILED. Check GitHub Actions logs."}'
+
+  follow-ups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: run-pipeline
+    if: ${{ always() }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Follow-Ups
+        env:
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:       ${{ secrets.SUPABASE_KEY }}
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SENDER_NAME:        ${{ secrets.SENDER_NAME }}
+        run: node src/followup.js
