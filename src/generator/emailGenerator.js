@@ -6,13 +6,8 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { generatePrompt } = require('../prompts/emailPrompt');
 const MY_RESUME = require('../context/resume');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 const MODEL = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022';
 
-/**
- * Strips ```json ... ``` fences if Claude wraps the JSON despite our prompt.
- */
 function extractJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   return (fenced ? fenced[1] : text).trim();
@@ -22,6 +17,7 @@ async function generateEmail(jobDescription, managerName, companyName) {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY missing');
   }
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const prompt = generatePrompt(jobDescription, managerName, companyName, MY_RESUME);
 
