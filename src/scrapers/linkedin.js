@@ -75,6 +75,12 @@ async function scrapeLinkedIn() {
   await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await sleep(randomDelay(3000, 6000));
 
+  await page.screenshot({ path: 'linkedin-debug.png', fullPage: false });
+  const pageTitle = await page.title();
+  console.log(`[linkedin] Page title: "${pageTitle}"`);
+  const bodyText = await page.locator('body').innerText().catch(() => '');
+  console.log(`[linkedin] Body preview: ${bodyText.slice(0, 300)}`);
+
   // Infinite-scroll handler — scroll the job results pane until no new
   // cards appear or we hit MAX_JOBS.
   let previousCount = 0;

@@ -73,6 +73,12 @@ async function scrapeNaukri() {
 
   await sleep(randomDelay(3000, 6000));
 
+  await page.screenshot({ path: 'naukri-debug.png', fullPage: false });
+  const pageTitle = await page.title();
+  console.log(`[naukri] Page title: "${pageTitle}"`);
+  const bodyText = await page.locator('body').innerText().catch(() => '');
+  console.log(`[naukri] Body preview: ${bodyText.slice(0, 300)}`);
+
   // Cards on Naukri's SRP — selectors change occasionally; the article element
   // tends to be the most stable container.
   const cards = await page.evaluate((max) => {

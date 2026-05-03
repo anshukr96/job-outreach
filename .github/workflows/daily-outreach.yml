@@ -39,6 +39,16 @@ jobs:
           SENDER_NAME:        ${{ secrets.SENDER_NAME }}
         run: node src/index.js
 
+      - name: Upload Debug Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-screenshots
+          path: |
+            linkedin-debug.png
+            naukri-debug.png
+          if-no-files-found: ignore
+
       - name: Notify on Failure
         if: failure() && env.SLACK_WEBHOOK != ''
         env:
