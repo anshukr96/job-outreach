@@ -1,10 +1,10 @@
 // File: src/scrapers/naukri.js
-// Scrapes Naukri job postings. Naukri is friendlier to scraping than LinkedIn,
-// so we don't need stealth — but we still throttle and use a real UA.
-
 require('dotenv').config();
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-extra');
+const stealth = require('puppeteer-extra-plugin-stealth')();
 const axios = require('axios');
+
+chromium.use(stealth);
 
 const BASE_URL =
   process.env.NAUKRI_URL ||
