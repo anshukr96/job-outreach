@@ -5,6 +5,8 @@
 require('dotenv').config();
 const axios = require('axios');
 const { guessEmail } = require('./emailGuesser');
+const { findManagerViaHunter } = require('./hunter');
+const { findManagerViaGitHub } = require('./github');
 
 const APOLLO_URL = 'https://api.apollo.io/v1/people/match';
 
@@ -79,17 +81,27 @@ async function findManager(domain) {
   manager = await callApollo(domain, FALLBACK_TITLES);
   if (manager?.email) return manager;
 
-  // Last resort: try to guess the email from name + domain. Apollo often
-  // returns a name even when the email field is null.
+  // Fallback 1: Hunter.io domain search (free, 25/month, needs professional email to signup)
+  const hunterResult = await findManagerViaHunter(domain);
+  if (hunterResult?.email) {
+    console.log(`[enrichment] Found via Hunter.io: ${hunterResult.name}`);
+    return hunterResult;
+  }
+
+  // Fallback 2: GitHub user search (free, no signup needed)
+  const companyName = domain.replace(/\.(com|in|io|co)$/, '');
+  const githubResult = await findManagerViaGitHub(companyName, domain);
+  if (githubResult?.email) {
+    console.log(`[enrichment] Found via GitHub: ${githubResult.name}`);
+    return githubResult;
+  }
+
+  // Fallback 3: guess email from name + domain
   const nameOnly = await callApollo(domain, [...PRIMARY_TITLES, ...FALLBACK_TITLES]);
   if (nameOnly?.firstName && nameOnly?.lastName) {
     const guessed = await guessEmail(nameOnly.firstName, nameOnly.lastName, domain);
     if (guessed) {
-      return {
-        ...nameOnly,
-        email: guessed,
-        confidence: 'low'
-      };
+      return { ...nameOnly, email: guessed, confidence: 'low' };
     }
   }
 
